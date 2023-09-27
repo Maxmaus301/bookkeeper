@@ -4,10 +4,6 @@ import sqlite3
 from typing import Any
 from dataclasses import dataclass
 
-@dataclass
-class Test:
-    name: str
-    pk: int = 0
 
 
 class SqliteRepository(AbstractRepository[T]):
@@ -34,9 +30,15 @@ class SqliteRepository(AbstractRepository[T]):
 
 
     def add(self, obj: T) -> int:
+        """
+        Добавить объект в репозиторий, вернуть id объекта,
+        также записать id в атрибут pk.
+        """
         names = ', '.join(self.fields.keys())
         p = ', '.join("?" * len(self.fields))
         values = [getattr(obj, x) for x in self.fields]
+        if getattr(obj, 'pk', None) != 0:
+            raise ValueError(f'Forbidden to add object with filled PK')
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
@@ -44,7 +46,8 @@ class SqliteRepository(AbstractRepository[T]):
                 f'INSERT INTO {self.table_name} ({names}) VALUES ({p})',
                 values
                 )
-            obj.pk = cur.lastrowid
+            if cur.lastrowid is not None:
+                obj.pk = cur.lastrowid
         con.close()
         return obj.pk
 
@@ -62,7 +65,6 @@ class SqliteRepository(AbstractRepository[T]):
             return None
         ret: T = self.cls(pk=pk, **dict(zip(self.fields, row)))
         return ret
-
 
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
@@ -84,7 +86,7 @@ class SqliteRepository(AbstractRepository[T]):
                 )
             res = cur.fetchall()
         con.close()
-        return res
+        return [self.cls(pk=row[0], **dict(zip(self.fields, row[1:]))) for row in res]
 
 
     def update(self, obj: T) -> None:
@@ -97,6 +99,8 @@ class SqliteRepository(AbstractRepository[T]):
             cur.execute(
                 f'UPDATE {self.table_name} SET {fields} WHERE ROWID = {obj.pk}', values
             )
+            if cur.rowcount == 0:
+                raise ValueError('Cannot find Primary key to Update')
         con.close()
 
     def delete(self, pk: int) -> None:
@@ -104,9 +108,8 @@ class SqliteRepository(AbstractRepository[T]):
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute(f'DELETE FROM {self.table_name} WHERE ROWID = {pk}')
+            if cur.rowcount == 0:
+                raise KeyError('Cannot find Primary key to Delete')
         con.close()
 
-# r = SqliteRepository('test.db', Test)
-# a = Test('Maxim')
-# # r.add(a)
-# print(r.get(22))
+
