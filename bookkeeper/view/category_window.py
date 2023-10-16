@@ -59,10 +59,24 @@ class CategoryWindow(QMainWindow):
         self.category_table.setRowCount(size)
         self.category_table.setHorizontalHeaderLabels(name_horizontal_label)
         for i, row in enumerate(data):
-            item = QTableWidgetItem(row["category"])
+            item = QTableWidgetItem(row['name'])
             self.category_table.setItem(i, 0, item)
 
-            item = QTableWidgetItem(row["parent"])
+            item = QTableWidgetItem(row['parent'])
             self.category_table.setItem(i, 1, item)
+
+    def set_parent_choice(self, data):
+        """ Занести список при редактировании категорий """
+        self.parent_choice.clear()
+        self.parent_choice.addItem('-', -1)
+        for tup in data:
+            self.parent_choice.addItem(tup[0].capitalize(), tup[2])
+
+    def get_category_name(self):
+        return self.line_new_category.text()
+
+    def get_parent_pk(self):
+        return int(self.parent_choice.itemData(self.parent_choice.currentIndex()))
+
 
 

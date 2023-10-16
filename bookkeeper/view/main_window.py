@@ -20,6 +20,7 @@ class MainWindow(QMainWindow):
         self.exp_widget = ExpenseWidget()
         self.budget_button = BudgetWidget()
         self.new_exp_widget = NewExpWidget()
+        self.category_window = CategoryWindow()
 
         layout = QVBoxLayout()
         layout.addWidget(self.exp_widget)
@@ -46,7 +47,7 @@ class MainWindow(QMainWindow):
         exp_data_list = []
         for data in exp_data:
             if int(data.category) not in cat_dict.keys():
-                raise ValueError(f"Cannot find category wit ID {data.category}")
+                raise ValueError(f"Cannot find category with ID {data.category}")
             exp_data_list.append({"pk": data.pk,
                                     "expense_date": data.expense_date,
                                     "amount": data.amount,
@@ -55,18 +56,54 @@ class MainWindow(QMainWindow):
                                     })
         self.exp_widget.set_expense_table(exp_data_list, expense_size)
 
+    def set_category_table(self, cat_data):
+        """ Установить значения таблицы категорий """
+        size = len(cat_data)
+        cat_dict = {d.pk: d.name for d in cat_data}
+        cat_list = []
+        for data in cat_data:
+            cat_list.append({"pk": data.pk,
+                                  "name": data.name,
+                                  "parent": cat_dict[data.parent] if data.parent in cat_dict else '-'}
+                            )
+        self.category_window.set_category_table(cat_list, size)
+
+    def set_parent_choice(self, data) -> None:
+        """Установить значения выпадающего списка категории при добавлении новой категории """
+        cat_data_list = [[d.name, d.parent, d.pk] for d in data]
+        self.category_window.set_parent_choice(cat_data_list)
+
     def on_edit_button_clicked(self, slot):
         """ Нажатие на клавишу 'Редактировать' """
         self.new_exp_widget.edit_button.clicked.connect(slot)
 
+    def on_add_new_category_clicked(self, slot):
+        """ Нажатие на клавишу 'Добавить категорию' """
+        self.category_window.add_new_category.clicked.connect(slot)
+
     def get_amount(self):
+        """ Получить добавленную сумму траты"""
         return int(self.new_exp_widget.get_amount())
 
     def get_comment(self):
+        """ Получить комментарий новой траты """
         return self.new_exp_widget.get_comment()
 
     def get_selected_cat(self):
+        """ Получить категорию новой траты """
         return self.new_exp_widget.get_selected_cat()
+
+    def get_category_name(self):
+        """ Получить имя добавляемой категории """
+        return self.category_window.get_category_name()
+
+    def get_parent_pk(self):
+        """ Получить родителя добавляемой категории """
+        return self.category_window.get_parent_pk()
+
+    def open_category_window(self):
+        """ Показать окно редактирования категорий """
+        self.category_window.show()
 
 
 
