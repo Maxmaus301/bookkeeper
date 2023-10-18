@@ -16,9 +16,9 @@ class CategoryWindow(QMainWindow):
         layout = QVBoxLayout()
 
         category_window_label = QLabel('Категории')
-        # category_window_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         self.category_table = QTableWidget()
+        self.category_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.category_table.setColumnCount(2)
 
         header = self.category_table.horizontalHeader()
