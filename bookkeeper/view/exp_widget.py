@@ -22,6 +22,7 @@ class ExpenseWidget(QMainWindow):
         layout.addWidget(label)
 
         self.table_exp_widget = QTableWidget()
+        self.table_exp_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_exp_widget.setColumnCount(4)
 
 
